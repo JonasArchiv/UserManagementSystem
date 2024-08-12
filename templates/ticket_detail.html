@@ -85,6 +85,7 @@
             {% endif %}
         </div>
 
+        {% if ticket.status != 'Closed' %}
         <div class="comment-form">
             <h3>Add Comment:</h3>
             <form method="POST">
@@ -92,8 +93,15 @@
                 <input type="submit" name="add_comment" value="Add Comment">
             </form>
         </div>
+        {% else %}
+        <p>This ticket is closed. No further comments can be added.</p>
+        {% endif %}
 
+        {% if session.get('is_admin') %}
         <a href="{{ url_for('admin_tickets') }}" class="back-link">Back to Admin Tickets</a>
+        {% else %}
+        <a href="{{ url_for('my_tickets') }}" class="back-link">Back to My Tickets</a>
+        {% endif %}
     </div>
 </body>
 </html>

@@ -231,6 +231,41 @@ def ticket_detail(id):
     return render_template('ticket_detail.html', ticket=ticket, comments=comments)
 
 
+@app.route('/my_tickets')
+def my_tickets():
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    tickets = Ticket.query.filter_by(user_id=user_id).all()
+    return render_template('my_tickets.html', tickets=tickets)
+
+
+@app.route('/ticket/<int:id>', methods=['GET', 'POST'])
+def ticket_detail(id):
+    ticket = Ticket.query.get_or_404(id)
+
+    if request.method == 'POST':
+        if 'update_ticket' in request.form and session.get('is_admin'):
+            ticket.title = request.form['title']
+            ticket.description = request.form['description']
+            ticket.status = request.form['status']
+            db.session.commit()
+            flash('Ticket updated successfully!', 'success')
+        elif 'add_comment' in request.form and ticket.status != 'Closed':
+            content = request.form['comment']
+            comment = Comment(ticket_id=ticket.id, user_id=session['user_id'], content=content)
+            db.session.add(comment)
+            db.session.commit()
+            flash('Comment added successfully!', 'success')
+        elif ticket.status == 'Closed':
+            flash('You cannot comment on a closed ticket.', 'warning')
+
+    comments = Comment.query.filter_by(ticket_id=ticket.id).all()
+    return render_template('ticket_detail.html', ticket=ticket, comments=comments)
+
+
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
