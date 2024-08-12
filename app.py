@@ -26,6 +26,31 @@ class TimeEntry(db.Model):
     entry_type = db.Column(db.String(10), nullable=False)  # 'check_in' or 'check_out'
 
 
+class Ticket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='Open')  # 'Open', 'In Progress', 'Closed'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    comments = db.relationship('Comment', backref='ticket', lazy=True)
+
+    def __repr__(self):
+        return f'<Ticket {self.title}>'
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Comment by User {self.user_id}>'
+
+
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -153,6 +178,57 @@ def delete_user(id):
         db.session.commit()
         flash('User deleted successfully!', 'success')
     return redirect(url_for('admin'))
+
+
+@app.route('/create_ticket', methods=['GET', 'POST'])
+def create_ticket():
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        user_id = session['user_id']
+        new_ticket = Ticket(title=title, description=description, user_id=user_id)
+        db.session.add(new_ticket)
+        db.session.commit()
+        flash('Ticket created successfully!', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('create_ticket.html')
+
+
+@app.route('/admin/tickets')
+def admin_tickets():
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('You need to be an admin to access this page.', 'warning')
+        return redirect(url_for('index'))
+
+    tickets = Ticket.query.all()
+    return render_template('admin_tickets.html', tickets=tickets)
+
+
+@app.route('/ticket/<int:id>', methods=['GET', 'POST'])
+def ticket_detail(id):
+    ticket = Ticket.query.get_or_404(id)
+
+    if request.method == 'POST':
+        if 'update_ticket' in request.form:
+            ticket.title = request.form['title']
+            ticket.description = request.form['description']
+            ticket.status = request.form['status']
+            db.session.commit()
+            flash('Ticket updated successfully!', 'success')
+        elif 'add_comment' in request.form:
+            content = request.form['comment']
+            comment = Comment(ticket_id=ticket.id, user_id=session['user_id'], content=content)
+            db.session.add(comment)
+            db.session.commit()
+            flash('Comment added successfully!', 'success')
+
+    comments = Comment.query.filter_by(ticket_id=ticket.id).all()
+    return render_template('ticket_detail.html', ticket=ticket, comments=comments)
 
 
 if __name__ == '__main__':
