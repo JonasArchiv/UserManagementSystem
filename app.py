@@ -108,6 +108,53 @@ def check_out():
     return redirect(url_for('dashboard'))
 
 
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('You need to be an admin to access this page.', 'warning')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        if 'create_user' in request.form:
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
+            is_admin = 'is_admin' in request.form
+            hashed_password = generate_password_hash(password, method='sha256')
+            new_user = User(username=username, email=email, password=hashed_password, is_admin=is_admin)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('User created successfully!', 'success')
+        elif 'update_user' in request.form:
+            user_id = request.form['user_id']
+            user = User.query.get(user_id)
+            if user:
+                user.username = request.form['username']
+                user.email = request.form['email']
+                if request.form['password']:
+                    user.password = generate_password_hash(request.form['password'], method='sha256')
+                user.is_admin = 'is_admin' in request.form
+                db.session.commit()
+                flash('User updated successfully!', 'success')
+
+    users = User.query.all()
+    return render_template('admin.html', users=users)
+
+
+@app.route('/admin/delete_user/<int:id>')
+def delete_user(id):
+    if 'user_id' not in session or not session.get('is_admin'):
+        flash('You need to be an admin to perform this action.', 'warning')
+        return redirect(url_for('index'))
+
+    user = User.query.get(id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        flash('User deleted successfully!', 'success')
+    return redirect(url_for('admin'))
+
+
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
