@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Ticket Detail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .ticket-info {
+            margin-bottom: 20px;
+        }
+        .comments {
+            margin-top: 20px;
+        }
+        .comment-form {
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #007bff;
+        }
+        .status {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ticket Detail</h1>
+        <div class="ticket-info">
+            <h2>{{ ticket.title }}</h2>
+            <p><strong>Description:</strong> {{ ticket.description }}</p>
+            <p><strong>Status:</strong> {{ ticket.status }}</p>
+            {% if session.get('is_admin') %}
+            <form method="POST">
+                <label for="status">Change Status:</label>
+                <select id="status" name="status">
+                    <option value="Open" {% if ticket.status == 'Open' %} selected {% endif %}>Open</option>
+                    <option value="In Progress" {% if ticket.status == 'In Progress' %} selected {% endif %}>In Progress</option>
+                    <option value="Closed" {% if ticket.status == 'Closed' %} selected {% endif %}>Closed</option>
+                </select>
+                <input type="submit" name="update_ticket" value="Update Ticket">
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="comments">
+            <h3>Comments:</h3>
+            {% if comments %}
+                <ul>
+                    {% for comment in comments %}
+                    <li><strong>User {{ comment.user_id }}:</strong> {{ comment.content }} <em>({{ comment.created_at.strftime('%d %b %Y, %H:%M:%S') }})</em></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No comments yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="comment-form">
+            <h3>Add Comment:</h3>
+            <form method="POST">
+                <textarea name="comment" rows="4" placeholder="Enter your comment here..."></textarea>
+                <input type="submit" name="add_comment" value="Add Comment">
+            </form>
+        </div>
+
+        <a href="{{ url_for('admin_tickets') }}" class="back-link">Back to Admin Tickets</a>
+    </div>
+</body>
+</html>
