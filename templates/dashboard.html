@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .actions {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .actions a {
+            text-decoration: none;
+            color: #007bff;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .actions a:hover {
+            text-decoration: underline;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        td {
+            background-color: #fff;
+        }
+        .no-entries {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+        }
+        .logout-link,
+        .admin-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .admin-link {
+            color: #007bff;
+        }
+        .admin-link a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .admin-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <p>Hello, {{ user.username }}!</p>
+    <div class="actions">
+        <a href="{{ url_for('check_in') }}">Check In</a>
+        <a href="{{ url_for('check_out') }}">Check Out</a>
+    </div>
+
+    <h2>Your Time Entries:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if time_entries %}
+                {% for entry in time_entries %}
+                <tr>
+                    <td>{{ entry.timestamp.strftime('%d %b %Y, %H:%M:%S') }}</td>
+                    <td>{{ entry.entry_type | capitalize }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="2" class="no-entries">No time entries recorded.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="logout-link">
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+    {% if session.get('is_admin') %}
+    <div class="admin-link">
+        <a href="{{ url_for('admin') }}">Admin Panel</a>
+    </div>
+    {% endif %}
+</body>
+</html>
