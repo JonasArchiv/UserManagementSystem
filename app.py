@@ -68,6 +68,46 @@ def dashboard():
     return render_template('dashboard.html', user=user, time_entries=time_entries)
 
 
+@app.route('/check_in')
+def check_in():
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    existing_entry = TimeEntry.query.filter_by(user_id=user_id, entry_type='check_in').order_by(
+        TimeEntry.timestamp.desc()).first()
+    if existing_entry and not TimeEntry.query.filter_by(user_id=user_id, entry_type='check_out').order_by(
+            TimeEntry.timestamp.desc()).first():
+        flash('You are already checked in.', 'info')
+    else:
+        new_entry = TimeEntry(user_id=user_id, entry_type='check_in')
+        db.session.add(new_entry)
+        db.session.commit()
+        flash('Checked in successfully!', 'success')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/check_out')
+def check_out():
+    if 'user_id' not in session:
+        flash('You need to log in first.', 'warning')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    existing_entry = TimeEntry.query.filter_by(user_id=user_id, entry_type='check_out').order_by(
+        TimeEntry.timestamp.desc()).first()
+    if existing_entry and not TimeEntry.query.filter_by(user_id=user_id, entry_type='check_in').order_by(
+            TimeEntry.timestamp.desc()).first():
+        flash('You are not checked in.', 'info')
+    else:
+        new_entry = TimeEntry(user_id=user_id, entry_type='check_out')
+        db.session.add(new_entry)
+        db.session.commit()
+        flash('Checked out successfully!', 'success')
+    return redirect(url_for('dashboard'))
+
+
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
