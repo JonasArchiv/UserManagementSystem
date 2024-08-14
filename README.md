@@ -62,3 +62,6 @@ Welcome to the Time Management Application! Here’s how to use the app:
 6. **Admin Functions**: Admins can manage users and view all tickets on the `/admin` and `/admin/tickets` pages.
 
 Enjoy using the application!
+
+see a overwiev of the website https://jonasheilig.pythonanywhere.com/ <br>
+It hosted on a free service -> It can be that it isn't working on this site
